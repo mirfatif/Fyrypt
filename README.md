@@ -194,7 +194,6 @@ To be friendly with the battery, we try to minimize the CPU load e.g. by rate li
 - Blocking and logging targets only TCP, UDP and ICMP.
 - Firewall configuration is limited to OUTPUT chain only, not INPUT and FORWARD.
 - No fine-grained control of on-device, LAN, Wi-Fi, Mobile Data, VPN etc. (should we add this?)
-- No localization, so far (but planned).
 - More?
 
 ## More
@@ -247,6 +246,10 @@ You can use [PMX](https://github.com/mirfatif/PermissionManagerX) to see all req
 ## Screenshots
 
 <img src="screenshots/ss1.png" width="250"> <img src="screenshots/ss2.png" width="250"> <img src="screenshots/ss3.png" width="250"> <img src="screenshots/ss4.png" width="250"> <img src="screenshots/ss5.png" width="250"> <img src="screenshots/ss6.png" width="250"> <img src="screenshots/ss7.png" width="250"> <img src="screenshots/ss8.png" width="250"> <img src="screenshots/ss9.png" width="250"> <img src="screenshots/ss10.png" width="250"> <img src="screenshots/ss11.png" width="250"> <img src="screenshots/ss12.png" width="250"> <img src="screenshots/ss13.png" width="250"> <img src="screenshots/ss14.png" width="250"> <img src="screenshots/ss15.png" width="250"> <img src="screenshots/ss16.png" width="250">
+
+## Translation
+
+[![Crowdin](https://badges.crowdin.net/fyrypt/localized.svg)](https://crowdin.com/project/fyrypt)
 
 ## Used Libraries
 
