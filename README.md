@@ -75,6 +75,7 @@ It's the result of previous 2 configurations. Any running apps or processes whic
 
 In Apps and UIDs view, there are 2 options (checkboxes) for each UID:
 - Whitelist / unblock the app / UID
+  - Actually there's a third possible state for apps only: unblock when in use. See [visible app unblocking](#visible-app-unblocking).
 - Notify when the app / UID is blocked
 
 There's also a configuration screen to manually add firewall rules. Say you want to allow an app to access only certain ports. Define a rule like `-m owner --uid-owner <UID> -m multiport --dports 20:22`. Note that the table, chain and target are not specified. They are injected automatically. In the same way, rules can be defined based on source / destination IP, interface name etc.
@@ -129,6 +130,8 @@ Firewall service notification shows a button to unblock the foreground app which
 
 If the app is part of a group, you see 2 unblock buttons: one for app, other for group.
 
+There's also a way to automate the unblocking of apps when you open them. Tapping the block/unblock checkbox of an app cycles through 3 states: blocked, unblocked, and unblocked when in use. Or long press an app item in the list to open the options dialog. You can also entirely disable the foreground app auto-unblock feature in the Settings.
+
 ### Block on boot
 
 From Settings screen you can place a Magisk boot script (in [`/data/adb/post-fs-data.d/`](https://topjohnwu.github.io/Magisk/guides.html#boot-scripts)) which sets `iptables` OUTPUT policy to DROP so that no traffic leaks during startup. When boot completes and Fyrypt starts, it applies firewall rules and resets the policy.
@@ -142,6 +145,10 @@ All local generated and hotspot DNS traffic is redirected to `dnscrypt-proxy`. S
 Configuration screen has 2 more views to manually add allowed and blocked domains. There's also an options on the Settings screen to auto download the blocked list (currently [this](https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts) and [this](https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt)). Learn more about the configuration [here](https://github.com/DNSCrypt/dnscrypt-proxy/blob/master/dnscrypt-proxy/example-dnscrypt-proxy.toml).
 
 In order to use `dnscrypt-proxy` as DNS resolver, Android's "Private DNS" feature must be disabled. You'll see a notification if it's enabled.
+
+You can also configure in the Settings:
+- Redirect or not the incoming traffic from Wi-Fi hotspot or USB tethering towards `dnscrypt-proxy`, and
+- Restart or not the `dnscrypt-proxy` process if the device remains offline for some time.
 
 ## Logs
 
@@ -162,6 +169,8 @@ Blocked domains queries appear here, if configured. Learn about `dnscrypt-proxy`
 Apps connecting (or trying to connect) to any domains on the internet are logged here. Sorry developers ☹️
 
 Optionally encrypted DNS queries (DoH / DoT) can also be logged. But we do not do DPI to find out what the packets contain. Only a guess is made based on their destination. It may give false positives. For instance, https://cloudflare-dns.com hosts both the web service and the DoH service. So if you open the webpage, Fyrypt considers it a DoH query. But such instances are rare.
+
+DNS queries are cached so that the boring IP addresses in the logs can be shown as beautiful domain names. You can configure in the Settings how long the cached entries should be kept.
 
 ---
 
@@ -188,7 +197,7 @@ To be friendly with the battery, we try to minimize the CPU load e.g. by rate li
 ## Limitations of Fyrypt
 - Requires root, or `adb root`, as stated above.
 - PID firewall requires a custom kernel (on most devices) as explained above (should we switch to NFQUEUE + eBPF?).
-- Works on Android 10-15 only (will try to keep it working on new Android releases).
+- Works on Android 10-17 only (will try to keep it working on new Android releases).
 - You can only whitelist UIDs and PIDs. Blacklist mode is not supported.
 - Supports only IPv4, not IPv6 (but planned).
 - Blocking and logging targets only TCP, UDP and ICMP.
