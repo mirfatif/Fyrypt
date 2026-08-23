@@ -1,5 +1,5 @@
 # Fyrypt
-Android firewall with UID + PID rules, `dnscrypt-proxy` management, and per-app live network monitoring
+Android firewall with UID + PID rules, DNS encryption, and per-app live network monitoring
 
 Fyrypt is pronounced as fire-ept (/ˈfaɪɹɛpt/).
 
@@ -26,11 +26,13 @@ Fyrypt is pronounced as fire-ept (/ˈfaɪɹɛpt/).
   - [New app notify](#new-app-notify)
   - [Visible app unblocking](#visible-app-unblocking)
   - [Block on boot](#block-on-boot)
-- [DNSCrypt (dnscrypt-proxy)](#dnscrypt-dnscrypt-proxy)
+- [DNS encryption](#dns-encryption)
+  - [Built-in DNS Proxy](#built-in-dns-proxy)
+  - [`dnscrypt-proxy`](#dnscrypt-proxy)
 - [Logs](#logs)
   - [Blocked Events](#blocked-events)
   - [Network Activity](#network-activity)
-  - [Blocked Domains](#blocked-domains)
+  - [Domain Blocked Events](#domain-blocked-events)
   - [DNS Events](#dns-events)
 - [Notable](#notable)
 - [Limitations of Fyrypt](#limitations-of-fyrypt)
@@ -48,8 +50,8 @@ Fyrypt is pronounced as fire-ept (/ˈfaɪɹɛpt/).
 - **Server**: a computer (or a process running on a computer) which provides a specific service to other computers (or processes on the same computer). Websites are a common example. They are hosted on computers called web servers. When we "open" a website, we connect to its web server to fetch the required information or data.
 - **IP**: internet protocol. It's the language computers use to talk to each other on internet. Servers on internet have unique numbers assigned called IP addresses. When a client connects to a server, the former uses the IP address of the later to reach it.
 - **DNS**: domain name system. Addresses of websites we are familiar with are called domains. They are easy to remember. But networks use IP addresses to identify clients and servers. IP addresses, being numbers, are difficult to remember. So DNS is an active system on internet which maps domains to IP addresses. When we need to access a domain, we first request a DNS server to translate the domain to its IP address. DNS server are accessible at fixed IP addresses.
-- [**`dnscrypt-proxy`**](https://github.com/DNSCrypt/dnscrypt-proxy): it's an intermediary DNS server process which we run on our device. It encrypts the DNS queries before sending them to a DNS server on internet. The old plain (unencrypted) DNS queries are easily intercepted by Internet Service Providers (ISP) and governments. Encrypted DNS adds a layer of privacy. In this document we use DNSCrypt (which is also an encryption protocol) to refer to `dnscrypt-proxy`.
-- **Private DNS**: Android's encrypted DNS. Then why we need to use `dnscrypt-proxy`? Because Private DNS is not much configurable. For instance, you can't block an unwanted list of domains. Also, Private DNS talks DoT protocol which uses a dedicated port (853), easily identified.
+- **DNS Encryption**: adds a layer of privacy and security. The old plain (unencrypted) DNS queries are easily intercepted by Internet Service Providers (ISP) and governments. But it's possible to encrypt the DNS queries before sending them to a DNS server on internet using protocols like DoH or DoT.
+- **Private DNS**: Android's encrypted DNS. Then why we need to use our own DNS encryption? Because Private DNS is not much configurable. For instance, you can't block an unwanted list of domains. Also, Private DNS talks DoT protocol which uses a dedicated port (853), easily identified.
 
 ## UID Firewall
 
@@ -106,7 +108,7 @@ It's the result of previous 2 configurations. Any running processes which have b
 
 ---
 
-So, for the example given above, if you want to unblock the `adbd` process (but not other root processes), whitelist the service named `adbd`. Another service `netd` - responsible for DNS queries - also runs with root. You may also unblock it (if not using `dnscrypt-proxy`). But beware that `netd` also proxies connections other than DNS queries. So unblocking it may also unblock other apps.
+So, for the example given above, if you want to unblock the `adbd` process (but not other root processes), whitelist the service named `adbd`. Another service `netd` - responsible for DNS queries - also runs with root. You may also unblock it (if not using DNS encryption). But beware that `netd` also proxies connections other than DNS queries. So unblocking it may also unblock other apps.
 
 Similarly, many apps on Android devices are running with the system UID 1000, including the bloatware added by the OEM. If you want to keep them blocked but allow the core Android framework to connect to the internet, you can unblock the `system_server` or `com.android.settings` process.
 
@@ -136,19 +138,50 @@ There's also a way to automate the unblocking of apps when you open them. Tappin
 
 From Settings screen you can place a Magisk boot script (in [`/data/adb/post-fs-data.d/`](https://topjohnwu.github.io/Magisk/guides.html#boot-scripts)) which sets `iptables` OUTPUT policy to DROP so that no traffic leaks during startup. When boot completes and Fyrypt starts, it applies firewall rules and resets the policy.
 
-## DNSCrypt (dnscrypt-proxy)
+## DNS Encryption
 
-Default configuration runs a DoH server on localhost with cloudflare as upstream server. Customize it if you know what you are doing. Fyrypt app does not pack the `dnscrypt-proxy` binary. You can download it directly from their [repo](https://github.com/DNSCrypt/dnscrypt-proxy/releases/latest).
+We run a local intermediary DNS proxy which intercepts plain DNS queries and encrypts them. All local generated and optionally the hotspot DNS traffic is redirected towards the proxy. So no plain DNS queries go to the internet. Bye bye sniffer ISPs.
 
-All local generated and hotspot DNS traffic is redirected to `dnscrypt-proxy`. So no plain DNS queries go to the internet. Bye bye sniffer ISPs.
+Domains can be added to allow-list or block-list on the configuration screen. There's also an options on the Settings screen to auto download the block-list (currently [this](https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts) and [this](https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt)).
 
-Configuration screen has 2 more views to manually add allowed and blocked domains. There's also an options on the Settings screen to auto download the blocked list (currently [this](https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-social/hosts) and [this](https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt)). Learn more about the configuration [here](https://github.com/DNSCrypt/dnscrypt-proxy/blob/master/dnscrypt-proxy/example-dnscrypt-proxy.toml).
+You can also configure in the Settings if the incoming traffic from Wi-Fi hotspot or USB tethering should be redirected towards the DNS proxy or not.
 
-In order to use `dnscrypt-proxy` as DNS resolver, Android's "Private DNS" feature must be disabled. You'll see a notification if it's enabled.
+In order to use the local DNS proxy as a DNS resolver, Android's "Private DNS" feature must be disabled. You'll see a notification if it's enabled.
 
-You can also configure in the Settings:
-- Redirect or not the incoming traffic from Wi-Fi hotspot or USB tethering towards `dnscrypt-proxy`, and
-- Restart or not the `dnscrypt-proxy` process if the device remains offline for some time.
+There are 2 options:
+
+### Built-in DNS Proxy
+
+Fyrypt acts as a minimal DNS proxy which does filtering and encryption. No caching as Android already does that. You can select the upstream DoH server from a list in the Settings. Default is Cloudflare.
+
+Pros over `dnscrypt-proxy`:
+- You can configure per-app allow-list and block-list. Which means it's possible to block a domain globally but unblock only for selected apps. Or the vice versa.
+- No need to download the executable binary.
+- No separate process, which saves device resources.
+
+<details>
+  <summary>Patterns matching in allow-lists and block-lists:</summary>
+
+  ```
+  '*'            matches any sequence of characters
+  '?'            matches any single character
+
+  ads.*          matches anything with an "ads." prefix
+  *.example.com  matches example.com and all names within that zone such as www.example.com
+  example.com    identical to the above
+  =example.com   exactly matches example.com but not *.example.com
+  *sex*          matches any name containing that substring
+  ads*.example*  * and ? can be used anywhere
+  ```
+</details>
+
+### `dnscrypt-proxy`
+
+Default configuration uses cloudflare as the upstream DoH server. Customize it if you know what you are doing. Learn more about the configuration [here](https://github.com/DNSCrypt/dnscrypt-proxy/blob/master/dnscrypt-proxy/example-dnscrypt-proxy.toml).
+
+Fyrypt app does not pack the `dnscrypt-proxy` binary. You can download it directly from their [repo](https://github.com/DNSCrypt/dnscrypt-proxy/releases/latest).
+
+You can also configure in the Settings if the `dnscrypt-proxy` process should be restarted or not when the device remains offline for some time.
 
 ## Logs
 
@@ -160,9 +193,9 @@ Packets blocked due to UID or PID firewall end up here. They don't contain any i
 
 All outbound connections which have not been blocked are logged here. Monitoring only new connections (started by the apps and other processes) makes better sense. But you may opt in Settings to see all outgoing packets. This also shows outgoing traffic triggered by inbound connections, e.g., traffic from wireless ADB. A lot of local on-device traffic will also show up.
 
-### Blocked Domains
+### Domain Blocked Events
 
-Blocked domains queries appear here, if configured. Learn about `dnscrypt-proxy` configuration (link is given above).
+Blocked domains queries appear here. See [DNS Encryption](#dns-encryption).
 
 ### DNS Events
 
@@ -236,7 +269,7 @@ Despite having root privileges, Fyrypt does not make any persistent changes to y
 - `mirfatif.com`: It's home. But Fyrypt doesn't call home when it's with you. Rest assured. Occasional license checks happen with the bare minimum non-personal information sent to our tiny server (details [here](https://mirfatif.github.io/mirfatif/getpro#tnc)). App connects to the same domain when you send a crash report. What's being sent is visible to you on the screen.
 - `api.github.com`: To check for app updates.
 - `ip-api.com`: When you tap to fetch information about an IP. Note that free queries go over `http`, not `https`.
-- `cloudflare-dns.com`: DoH queries for `A` and `PTR` records. Their [JSON API](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json). By default `dnscrypt-proxy` is also configured to use Cloudflare as the upstream server.
+- `cloudflare-dns.com`: DoH queries for `A` and `PTR` records. Their [JSON API](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/dns-json). By default the DNS proxy is also configured to use Cloudflare as the upstream server.
 - `1.1.1.1:80`: Only the TCP handshake to check the internet connectivity. No data transfer occurs.
 - Hundreds of name resolutions to get their latest IP addresses when you opt to watch DoH queries. [Here](https://github.com/crypt0rr/public-doh-servers/blob/main/dns.list) is the list. We do not connect to them.
 - `raw.githubusercontent.com`: To get the DoH domains list (link is given above). Also to get blacklisted domains when you opt to auto update DNSCrypt blocked list (links are given above).
@@ -246,7 +279,7 @@ Despite having root privileges, Fyrypt does not make any persistent changes to y
 - POST_NOTIFICATIONS: To show notifications.
 - FOREGROUND_SERVICE: To run persistent firewall service.
 - ACCESS_NETWORK_STATE: To reapply firewall rules on network changes. Also to check internet connectivity.
-- INTERNET: For [on-device ADB access and IPC](https://mirfatif.github.io/PermissionManagerX/help/en/#faq25), license checks, `dnscrypt-proxy` etc. Read detailed functionality above.
+- INTERNET: For [on-device ADB access and IPC](https://mirfatif.github.io/PermissionManagerX/help/en/#faq25), license checks, DNS proxy etc. Read detailed functionality above.
 - RECEIVE_BOOT_COMPLETED: To start services after reboot.
 - WAKE_LOCK: Used by [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) for scheduled tasks.
 
