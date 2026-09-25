@@ -17,16 +17,18 @@ Fyrypt is pronounced as fire-ept (/ˈfaɪɹɛpt/).
 - [UID Firewall](#uid-firewall)
   - [Apps view](#apps-view)
   - [UIDs view](#uids-view)
+  - [Live view](#live-view)
 - [PID Firewall](#pid-firewall)
   - [Processes view](#processes-view)
   - [Services view](#services-view)
-  - [Live view](#live-view)
-- [Firewall management](#firewall-management)
+  - [Live view](#live-view-1)
+- [Firewall Management](#firewall-management)
   - [Blocking Groups](#blocking-groups)
   - [New app notify](#new-app-notify)
+  - [Blocked events notify](#blocked-events-notify)
   - [Visible app unblocking](#visible-app-unblocking)
   - [Block on boot](#block-on-boot)
-- [DNS encryption](#dns-encryption)
+- [DNS Encryption](#dns-encryption)
   - [Built-in DNS Proxy](#built-in-dns-proxy)
   - [`dnscrypt-proxy`](#dnscrypt-proxy)
 - [Logs](#logs)
@@ -114,7 +116,7 @@ Similarly, many apps on Android devices are running with the system UID 1000, in
 
 And so on.
 
-## Firewall management
+## Firewall Management
 
 Note that a process or an app is unblocked if it's whitelisted by UID, or PID, or both.
 
@@ -125,6 +127,10 @@ Add apps, UIDs, processes and services to a group. And then block / unblock the 
 ### New app notify
 
 When firewall service is active and an app is installed which has INTERNET permission, you see a notification to block or unblock the app.
+
+### Blocked events notify
+
+Show a notification when an app or UID is blocked. You may also opt to get notified about DNS blocked events in addition to firewall blocked events. Plus, the notification preference can be configured for each app and UID.
 
 ### Visible app unblocking
 
@@ -158,9 +164,13 @@ Pros over `dnscrypt-proxy`:
 - You can configure per-app allow-list and block-list. Which means it's possible to block a domain globally but unblock only for selected apps. Or the vice versa.
 - No need to download the executable binary.
 - No separate process, which saves device resources.
+- Get notified about blocked DNS queries. See [blocked events notify](#blocked-events-notify).
+
+Precedence order is: UID allow-list > UID block-list > Global allow-list > Global block-list.  
+Queries not matching any list are allowed.
 
 <details>
-  <summary>Patterns matching in allow-lists and block-lists:</summary>
+  <summary>Pattern matching in allow-lists and block-lists:</summary>
 
   ```
   '*'            matches any sequence of characters
