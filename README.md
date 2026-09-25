@@ -126,6 +126,10 @@ Add apps, UIDs, processes and services to a group. And then block / unblock the 
 
 When firewall service is active and an app is installed which has INTERNET permission, you see a notification to block or unblock the app.
 
+### Blocked events notify
+
+Show a notification when an app or UID is blocked. You may also opt to get notified about DNS blocked events in addition to firewall blocked events. Plus, the notification preference can be configured for each app and UID.
+
 ### Visible app unblocking
 
 Firewall service notification shows a button to unblock the foreground app which is visible on screen (provided that it has INTERNET permission and is blocked). If you unblock the app, it remains unblocked as long as you are using it. After being closed, Fyrypt blocks the app after 30 seconds (configurable in Settings).
@@ -158,6 +162,7 @@ Pros over `dnscrypt-proxy`:
 - You can configure per-app allow-list and block-list. Which means it's possible to block a domain globally but unblock only for selected apps. Or the vice versa.
 - No need to download the executable binary.
 - No separate process, which saves device resources.
+- Get notified about blocked DNS queries. See [blocked events notify](#blocked-events-notify).
 
 <details>
   <summary>Patterns matching in allow-lists and block-lists:</summary>
