@@ -9,7 +9,7 @@ Fyrypt is pronounced as fire-ept (/ˈfaɪɹɛpt/).
 
 👉 **Attention:**
 - $${\color{red}\textbf{ROOT}}$$ is required. Your device must be rooted. ADB is supported only if [`adb root`](https://android.stackexchange.com/a/213429/218526) works.
-- Enabling firewall without proper configuration blocks all network access. You may lock yourself out in case of remote access. Fyrypt itself won't be able to get root access if local network access is denied.
+- Enabling firewall without proper configuration blocks all network access. You may lock yourself out in case of remote access.
 
 **Contents:**
 
